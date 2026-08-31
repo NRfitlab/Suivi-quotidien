@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon suivi quotidien</title>
+<style>
+:root{--p:#5b4bb7;--bg:#f4f3fb;--card:#fff;--txt:#20222b;--mut:#686b78;--bd:#dfdfea;--ok:#177245;--err:#b3261e}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--txt)}
+.container{max-width:680px;margin:auto;padding:20px 16px 45px}header{text-align:center;margin:10px 0 20px}
+h1{margin:0;font-size:2rem}.subtitle{color:var(--mut);margin-top:8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 3px 12px #0000000a}
+.card h2{margin:0 0 14px;color:#44358f;font-size:1.2rem}label{display:block;font-weight:600;margin:15px 0 7px}
+input[type=email],input[type=password],input[type=time],textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:10px;font-size:1rem;background:#fff}
+textarea{min-height:90px}.time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slider-labels{display:flex;justify-content:space-between;gap:10px;color:var(--mut);font-size:.84rem;margin-bottom:6px}
+.slider-row{display:flex;align-items:center;gap:10px}input[type=range]{width:100%;accent-color:var(--p)}
+.value{min-width:78px;text-align:center;padding:8px;background:#f0eff8;border-radius:9px;font-weight:700}
+button{width:100%;border:0;border-radius:12px;padding:15px;background:var(--p);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:10px}
+button.secondary{width:auto;margin:0;padding:8px 12px;background:transparent;color:#44358f;border:1px solid var(--bd)}
+.status{text-align:center;font-weight:600;margin:14px 0 4px;min-height:24px}.success{color:var(--ok)}.error{color:var(--err)}.info{color:#44358f}
+.small{font-size:.82rem;color:var(--mut);text-align:center}.date-box{text-align:center;background:#fff;border:1px solid var(--bd);padding:12px;border-radius:12px;margin-bottom:14px;font-weight:600;text-transform:capitalize}
+.hidden{display:none!important}.loading{text-align:center;color:var(--mut);padding:40px 10px}.userbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:.85rem;color:var(--mut)}
+@media(max-width:500px){h1{font-size:1.65rem}.time-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="container">
+<div id="loading" class="loading">Chargement…</div>
+
+<section id="authView" class="hidden">
+<header><h1>🌙 Mon suivi quotidien</h1><div class="subtitle">Connectez-vous pour remplir votre questionnaire</div></header>
+<div class="card"><h2>Connexion</h2>
+<form id="loginForm">
+<label>Adresse e-mail</label><input id="email" type="email" required>
+<label>Mot de passe</label><input id="password" type="password" required>
+<button type="submit">Se connecter</button>
+</form><div id="authStatus" class="status"></div>
+<p class="small">Le compte est créé au préalable par le chercheur.</p></div>
+</section>
+
+<section id="surveyView" class="hidden">
+<header><h1>🌙 Mon suivi quotidien</h1><div class="subtitle">Merci de prendre 1 à 2 minutes pour répondre</div></header>
+<div class="userbar"><span id="userEmail"></span><button id="logoutButton" class="secondary" type="button">Déconnexion</button></div>
+<div class="date-box" id="dateBox"></div>
+
+<form id="survey">
+<section class="card"><h2>😴 Sommeil de la nuit dernière</h2>
+<div class="time-row">
+<div><label>À quelle heure vous êtes-vous couché(e) ?</label><input type="time" id="bedTime" required></div>
+<div><label>À quelle heure vous êtes-vous réveillé(e) ?</label><input type="time" id="wakeTime" required></div>
+</div>
+<label>Quelle a été la qualité de votre sommeil ?</label><div class="slider-labels"><span>Très mauvaise</span><span>Très bonne</span></div>
+<div class="slider-row"><input type="range" id="sleepQuality" min="0" max="100" value="50"><span class="value" id="sleepQualityValue">50 / 100</span></div>
+<label>À quel point vous sentez-vous reposé(e) ce matin ?</label><div class="slider-labels"><span>Pas du tout</span><span>Tout à fait</span></div>
+<div class="slider-row"><input type="range" id="rested" min="0" max="100" value="50"><span class="value" id="restedValue">50 / 100</span></div>
+</section>
+
+<section class="card"><h2>🙂 Votre état aujourd'hui</h2>
+<label>Comment évaluez-vous votre humeur générale ?</label><div class="slider-labels"><span>Très négative</span><span>Très positive</span></div>
+<div class="slider-row"><input type="range" id="mood" min="0" max="100" value="50"><span class="value" id="moodValue">50 / 100</span></div>
+<label>Votre niveau de stress :</label><div class="slider-labels"><span>Aucun</span><span>Extrêmement élevé</span></div>
+<div class="slider-row"><input type="range" id="stress" min="0" max="100" value="50"><span class="value" id="stressValue">50 / 100</span></div>
+<label>Votre niveau d'énergie :</label><div class="slider-labels"><span>Très faible</span><span>Très élevé</span></div>
+<div class="slider-row"><input type="range" id="energy" min="0" max="100" value="50"><span class="value" id="energyValue">50 / 100</span></div>
+</section>
+
+<section class="card"><h2>📝 Commentaire facultatif</h2>
+<label>Y a-t-il quelque chose de particulier qui pourrait avoir influencé votre sommeil ou votre humeur ?</label>
+<textarea id="comment" maxlength="500" placeholder="Écrivez ici si vous le souhaitez..."></textarea></section>
+<button id="submitButton" type="submit">✓ Enregistrer mes réponses</button>
+<div class="status" id="surveyStatus"></div>
+<p class="small">🔒 Les réponses sont enregistrées dans la base de données.</p>
+</form></section>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const supabase=createClient("https://rdtylyqxfsdbphkptkdw.supabase.co","sb_publishable_IHVRnoGdyddArovQEDct_w_hXLlx8U3");
+const $=id=>document.getElementById(id); let currentUser=null;
+
+function show(v){$("loading").classList.add("hidden");$("authView").classList.toggle("hidden",v!=="auth");$("surveyView").classList.toggle("hidden",v!=="survey")}
+function status(id,msg="",type=""){const e=$(id);e.textContent=msg;e.className="status "+type}
+function todayISO(){const d=new Date(),o=d.getTimezoneOffset();return new Date(d.getTime()-o*60000).toISOString().slice(0,10)}
+function setDate(){$("dateBox").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
+["sleepQuality","rested","mood","stress","energy"].forEach(id=>$(id).addEventListener("input",()=>$(id+"Value").textContent=$(id).value+" / 100"));
+
+async function checkToday(){
+ status("surveyStatus","Vérification du questionnaire du jour…","info");
+ const {data,error}=await supabase.from("suivi_quotidien").select("id").eq("participant_id",currentUser.id).eq("date_reponse",todayISO()).maybeSingle();
+ if(error){status("surveyStatus","Impossible de vérifier : "+error.message,"error");return}
+ if(data){$("survey").querySelectorAll("input,textarea,button").forEach(e=>{if(e.id!=="logoutButton")e.disabled=true});status("surveyStatus","✅ Le questionnaire d'aujourd'hui a déjà été rempli. Merci !","success")}
+ else status("surveyStatus","");
+}
+async function enterSurvey(user){currentUser=user;$("userEmail").textContent=user.email||"";setDate();show("survey");await checkToday()}
+
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();status("authStatus","Connexion…","info");
+ const {data,error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error){status("authStatus","Erreur : "+error.message,"error");return}
+ await enterSurvey(data.user);
+});
+
+$("survey").addEventListener("submit",async e=>{
+ e.preventDefault(); if(!currentUser)return;
+ const b=$("submitButton");b.disabled=true;status("surveyStatus","Enregistrement en cours…","info");
+ const payload={participant_id:currentUser.id,date_reponse:todayISO(),heure_coucher:$("bedTime").value,heure_reveil:$("wakeTime").value,qualite_sommeil:+$("sleepQuality").value,repos:+$("rested").value,humeur:+$("mood").value,stress:+$("stress").value,energie:+$("energy").value,commentaire:$("comment").value.trim()||null};
+ const {error}=await supabase.from("suivi_quotidien").insert(payload);
+ if(error){status("surveyStatus",error.code==="23505"?"⚠️ Une réponse existe déjà pour aujourd'hui.":"Erreur : "+error.message,"error");b.disabled=false;return}
+ status("surveyStatus","✅ Merci ! Vos réponses ont été enregistrées.","success");
+ $("survey").querySelectorAll("input,textarea,button").forEach(e=>{if(e.id!=="logoutButton")e.disabled=true});
+});
+
+$("logoutButton").addEventListener("click",async()=>{await supabase.auth.signOut();currentUser=null;$("survey").reset();show("auth")});
+const {data:{session}}=await supabase.auth.getSession();
+if(session?.user)await enterSurvey(session.user);else show("auth");
+</script>
+</body></html>

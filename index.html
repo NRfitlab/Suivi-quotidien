@@ -3,6 +3,12 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mon suivi quotidien</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#5b4bb7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mon suivi quotidien">
+<link rel="apple-touch-icon" href="./icons/icon-192.svg">
 <style>
 :root{--p:#5b4bb7;--bg:#f4f3fb;--card:#fff;--txt:#20222b;--mut:#686b78;--bd:#dfdfea;--ok:#177245;--err:#b3261e}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--txt)}
@@ -112,5 +118,10 @@ $("survey").addEventListener("submit",async e=>{
 $("logoutButton").addEventListener("click",async()=>{await supabase.auth.signOut();currentUser=null;$("survey").reset();show("auth")});
 const {data:{session}}=await supabase.auth.getSession();
 if(session?.user)await enterSurvey(session.user);else show("auth");
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+}
 </script>
 </body></html>

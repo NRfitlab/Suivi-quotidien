@@ -3,12 +3,6 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mon suivi quotidien</title>
-<link rel="manifest" href="./manifest.json">
-<meta name="theme-color" content="#5b4bb7">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Mon suivi quotidien">
-<link rel="apple-touch-icon" href="./icons/icon-192.svg">
 <style>
 :root{--p:#5b4bb7;--bg:#f4f3fb;--card:#fff;--txt:#20222b;--mut:#686b78;--bd:#dfdfea;--ok:#177245;--err:#b3261e}
 *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--txt)}
@@ -44,7 +38,7 @@ button.secondary{width:auto;margin:0;padding:8px 12px;background:transparent;col
 </section>
 
 <section id="surveyView" class="hidden">
-<header><h1>🌙 Mon suivi quotidien</h1><div class="subtitle">Merci de prendre 1 à 2 minutes pour répondre</div></header>
+<header><h1>Mon suivi quotidien</h1><div class="subtitle">Merci de prendre 1 à 2 minutes pour répondre</div></header>
 <div class="userbar"><span id="userEmail"></span><button id="logoutButton" class="secondary" type="button">Déconnexion</button></div>
 <div class="date-box" id="dateBox"></div>
 
@@ -55,18 +49,18 @@ button.secondary{width:auto;margin:0;padding:8px 12px;background:transparent;col
 <div><label>À quelle heure vous êtes-vous réveillé(e) ?</label><input type="time" id="wakeTime" required></div>
 </div>
 <label>Quelle a été la qualité de votre sommeil ?</label><div class="slider-labels"><span>Très mauvaise</span><span>Très bonne</span></div>
-<div class="slider-row"><input type="range" id="sleepQuality" min="0" max="100" value="50"><span class="value" id="sleepQualityValue">50 / 100</span></div>
+<div class="slider-row"><input type="range" id="sleepQuality" min="0" max="100" value="50"></div>
 <label>À quel point vous sentez-vous reposé(e) ce matin ?</label><div class="slider-labels"><span>Pas du tout</span><span>Tout à fait</span></div>
-<div class="slider-row"><input type="range" id="rested" min="0" max="100" value="50"><span class="value" id="restedValue">50 / 100</span></div>
+<div class="slider-row"><input type="range" id="rested" min="0" max="100" value="50"></div>
 </section>
 
 <section class="card"><h2>🙂 Votre état aujourd'hui</h2>
 <label>Comment évaluez-vous votre humeur générale ?</label><div class="slider-labels"><span>Très négative</span><span>Très positive</span></div>
-<div class="slider-row"><input type="range" id="mood" min="0" max="100" value="50"><span class="value" id="moodValue">50 / 100</span></div>
+<div class="slider-row"><input type="range" id="mood" min="0" max="100" value="50"></div>
 <label>Votre niveau de stress :</label><div class="slider-labels"><span>Aucun</span><span>Extrêmement élevé</span></div>
-<div class="slider-row"><input type="range" id="stress" min="0" max="100" value="50"><span class="value" id="stressValue">50 / 100</span></div>
+<div class="slider-row"><input type="range" id="stress" min="0" max="100" value="50"></div>
 <label>Votre niveau d'énergie :</label><div class="slider-labels"><span>Très faible</span><span>Très élevé</span></div>
-<div class="slider-row"><input type="range" id="energy" min="0" max="100" value="50"><span class="value" id="energyValue">50 / 100</span></div>
+<div class="slider-row"><input type="range" id="energy" min="0" max="100" value="50"></div>
 </section>
 
 <section class="card"><h2>📝 Commentaire facultatif</h2>
@@ -118,10 +112,5 @@ $("survey").addEventListener("submit",async e=>{
 $("logoutButton").addEventListener("click",async()=>{await supabase.auth.signOut();currentUser=null;$("survey").reset();show("auth")});
 const {data:{session}}=await supabase.auth.getSession();
 if(session?.user)await enterSurvey(session.user);else show("auth");
-</script>
-<script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
-}
 </script>
 </body></html>

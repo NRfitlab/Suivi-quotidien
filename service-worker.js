@@ -1,5 +1,5 @@
-const CACHE_NAME = "suivi-quotidien-v2";
-const APP_SHELL = ["./","./index.html","./manifest.json","./icons/icon-192.svg","./icons/icon-512.svg","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png"];
+const CACHE_NAME = "suivi-quotidien-v3";
+const APP_SHELL = ["./","./index.html","./manifest.json","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));

@@ -4,8 +4,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f4f3fb",
-  "theme_color": "#5b4bb7",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
   "description": "Suivi quotidien du sommeil et de l'humeur",
   "icons": [
     {

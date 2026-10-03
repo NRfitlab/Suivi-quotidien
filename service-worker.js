@@ -1,4 +1,4 @@
-const CACHE_NAME = "suivi-quotidien-v3";
+const CACHE_NAME = "suivi-quotidien-v4";
 const APP_SHELL = ["./","./index.html","./manifest.json","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png"];
 
 self.addEventListener("install", event => {
@@ -17,7 +17,13 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
-    caches.match(event.request).then(cached => cached || fetch(event.request))
+    fetch(event.request)
+      .then(res => {
+        if (res.ok) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(event.request, copy)); }
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

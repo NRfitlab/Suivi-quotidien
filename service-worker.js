@@ -1,29 +1,24 @@
-const CACHE_NAME = "suivi-quotidien-v4";
-const APP_SHELL = ["./","./index.html","./manifest.json","./icons/icon-192.png","./icons/icon-512.png","./icons/apple-touch-icon.png","./icons/favicon-32.png"];
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
+self.addEventListener("fetch", () => {});
 
-self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
-  self.skipWaiting();
+self.addEventListener("push", event => {
+  let d = {};
+  try { d = event.data ? event.data.json() : {}; } catch (e) {}
+  event.waitUntil(self.registration.showNotification(d.title || "Rappel", {
+    body: d.body || "",
+    icon: "./icons/icon-192.png",
+    badge: "./icons/favicon-32.png",
+    tag: "rappel-quotidien",
+    data: { url: d.url || "./" }
+  }));
 });
 
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys => Promise.all(
-      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-    ))
-  );
-  self.clients.claim();
-});
-
-self.addEventListener("fetch", event => {
-  if (event.request.method !== "GET") return;
-  if (new URL(event.request.url).origin !== self.location.origin) return;
-  event.respondWith(
-    fetch(event.request)
-      .then(res => {
-        if (res.ok) { const copy = res.clone(); caches.open(CACHE_NAME).then(c => c.put(event.request, copy)); }
-        return res;
-      })
-      .catch(() => caches.match(event.request))
-  );
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+  const url = event.notification.data.url;
+  event.waitUntil(clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
+    for (const c of list) if (c.url.startsWith(url) && "focus" in c) return c.focus();
+    return clients.openWindow(url);
+  }));
 });

@@ -66,6 +66,11 @@ button.secondary{width:auto;margin:0;padding:8px 12px;background:transparent;col
 <div class="userbar"><span id="userEmail"></span><button id="logoutButton" class="secondary" type="button">Déconnexion</button></div>
 <div class="date-box" id="dateBox"></div>
 
+<div id="notifBox" class="card hidden"><h2>🔔 Rappel du matin</h2>
+<p class="small" id="notifHelp" style="text-align:left;margin:0 0 8px"></p>
+<button id="notifBtn" type="button">Activer le rappel à 7 h</button>
+<div id="notifStatus" class="status"></div></div>
+
 <form id="survey">
 <section class="card"><h2>😴 Sommeil de la nuit dernière</h2>
 <div class="time-row">
@@ -111,6 +116,37 @@ const linkError=hashParams.get("error_code")||"";
 const supabase=createClient("https://rdtylyqxfsdbphkptkdw.supabase.co","sb_publishable_IHVRnoGdyddArovQEDct_w_hXLlx8U3");
 const $=id=>document.getElementById(id); let currentUser=null;
 
+// ---- Notifications push ----
+const VAPID_PUBLIC_KEY="BH4JwNxV3fKHKpgyMzFs-PXIhvHh_xF-v9vjUhc4Xu5kOXj7i2WAO_pLUydnv-RwsMC0tfyWAMXxxgDiS_jUP8U";
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+const b64=s=>{const p="=".repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+const pushOK="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+function saveSub(sub){const j=sub.toJSON();return supabase.from("push_subscriptions").upsert({participant_id:currentUser.id,app:"quotidien",endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"participant_id,app,endpoint"})}
+async function setupNotif(){
+ const box=$("notifBox"),btn=$("notifBtn"),help=$("notifHelp");
+ if(isIOS&&!standalone){box.classList.remove("hidden");btn.classList.add("hidden");help.textContent="Sur iPhone : dans Safari, touchez Partager, puis « Sur l'écran d'accueil ». Ouvrez ensuite l'app depuis son icône pour activer le rappel.";return}
+ if(!pushOK||VAPID_PUBLIC_KEY.startsWith("COLLER"))return;
+ const reg=await navigator.serviceWorker.ready;
+ const sub=await reg.pushManager.getSubscription();
+ box.classList.remove("hidden");
+ if(sub&&Notification.permission==="granted"){help.textContent="✅ Rappel activé : notification à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.add("hidden");await saveSub(sub);return}
+ if(Notification.permission==="denied"){help.textContent="Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du navigateur, puis rechargez la page.";btn.classList.add("hidden");return}
+ help.textContent="Recevez un rappel à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.remove("hidden");
+}
+$("notifBtn").addEventListener("click",async()=>{
+ status("notifStatus","Activation…","info");
+ try{
+  if(await Notification.requestPermission()!=="granted"){status("notifStatus","Autorisation refusée.","error");return}
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID_PUBLIC_KEY)});
+  const {error}=await saveSub(sub);
+  if(error){status("notifStatus","Erreur : "+error.message,"error");return}
+  status("notifStatus","");await setupNotif();
+ }catch(e){status("notifStatus","Erreur : "+e.message,"error")}
+});
+
 function show(v){$("loading").classList.add("hidden");$("authView").classList.toggle("hidden",v!=="auth");$("pwdView").classList.toggle("hidden",v!=="pwd");$("surveyView").classList.toggle("hidden",v!=="survey")}
 function status(id,msg="",type=""){const e=$(id);e.textContent=msg;e.className="status "+type}
 function todayISO(){const d=new Date(),o=d.getTimezoneOffset();return new Date(d.getTime()-o*60000).toISOString().slice(0,10)}
@@ -127,7 +163,7 @@ async function checkToday(){
  if(data){$("survey").querySelectorAll("input,textarea,button").forEach(e=>{if(e.id!=="logoutButton")e.disabled=true});status("surveyStatus","✅ Le questionnaire d'aujourd'hui a déjà été rempli. Merci !","success")}
  else status("surveyStatus","");
 }
-async function enterSurvey(user){currentUser=user;$("userEmail").textContent=user.email||"";setDate();show("survey");await checkToday()}
+async function enterSurvey(user){currentUser=user;$("userEmail").textContent=user.email||"";setDate();show("survey");setupNotif().catch(()=>{});await checkToday()}
 
 $("loginForm").addEventListener("submit",async e=>{
  e.preventDefault();status("authStatus","Connexion…","info");

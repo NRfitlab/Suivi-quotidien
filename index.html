@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mon suivi quotidien</title>
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Suivi quotidien">
+<meta name="theme-color" content="#0a0e1a">
+<style>
+:root{--p:#7c5cff;--p2:#4f94fa;--bg:#0a0e1a;--card:rgba(255,255,255,0.05);--txt:#eef0fa;--mut:#8a92ad;--bd:rgba(255,255,255,0.09);--field:rgba(255,255,255,0.04);--ok:#4ade80;--err:#f87171}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;font-family:Arial,sans-serif;color:var(--txt);
+background:radial-gradient(circle at 50% 0%, rgba(124,92,255,0.28), transparent 55%),var(--bg);
+background-attachment:fixed;background-repeat:no-repeat}
+.container{max-width:680px;margin:auto;padding:20px 16px 45px}header{text-align:center;margin:10px 0 24px}
+.logo{width:64px;height:64px;margin-bottom:12px;filter:drop-shadow(0 0 18px rgba(124,92,255,0.55))}
+h1{margin:0;font-size:1.7rem;font-weight:700}.subtitle{color:var(--mut);margin-top:8px}
+.card{background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--bd);border-radius:20px;padding:18px;margin:14px 0}
+.card h2{margin:0 0 14px;color:var(--txt);font-size:1.15rem}label{display:block;font-weight:600;margin:15px 0 7px}
+input[type=email],input[type=password],input[type=time],textarea{width:100%;padding:12px;border:1px solid var(--bd);border-radius:10px;font-size:1rem;background:var(--field);color:var(--txt)}
+input::placeholder,textarea::placeholder{color:var(--mut)}
+textarea{min-height:90px}.time-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slider-labels{display:flex;justify-content:space-between;gap:10px;color:#fff;font-size:.84rem;margin-bottom:6px}
+.slider-row{display:flex;align-items:center;gap:10px}input[type=range]{width:100%;accent-color:var(--p2)}
+.value{min-width:78px;text-align:center;padding:8px;background:var(--field);border-radius:9px;font-weight:700}
+button{width:100%;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,var(--p),var(--p2));color:#fff;font-size:1rem;font-weight:700;cursor:pointer;margin-top:10px;box-shadow:0 8px 24px rgba(124,92,255,0.35)}
+button:disabled{opacity:.55;box-shadow:none;cursor:default}
+button.secondary{width:auto;margin:0;padding:8px 12px;background:transparent;color:var(--txt);border:1px solid var(--bd);box-shadow:none}
+.status{text-align:center;font-weight:600;margin:14px 0 4px;min-height:24px}.success{color:var(--ok)}.error{color:var(--err)}.info{color:var(--p2)}
+.small{font-size:.82rem;color:var(--mut);text-align:center}.date-box{text-align:center;background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--bd);padding:12px;border-radius:12px;margin-bottom:14px;font-weight:600;text-transform:capitalize}
+.hidden{display:none!important}.loading{text-align:center;color:var(--mut);padding:40px 10px}.userbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font-size:.85rem;color:var(--mut)}
+@media(max-width:500px){h1{font-size:1.4rem}.time-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="container">
+<div id="loading" class="loading">Chargement…</div>
+
+<section id="authView" class="hidden">
+<header><img class="logo" src="./icons/icon-192.png" alt=""><h1>Mon suivi quotidien</h1><div class="subtitle">Connectez-vous pour remplir votre questionnaire</div></header>
+<div class="card"><h2>Connexion</h2>
+<form id="loginForm">
+<label>Adresse e-mail</label><input id="email" type="email" required>
+<label>Mot de passe</label><input id="password" type="password" required>
+<button type="submit">Se connecter</button>
+</form><div id="authStatus" class="status"></div>
+<p class="small">Le compte est créé au préalable par le chercheur.</p></div>
+</section>
+
+<section id="pwdView" class="hidden">
+<header><img class="logo" src="./icons/icon-192.png" alt=""><h1>Bienvenue</h1><div class="subtitle">Choisissez votre mot de passe</div></header>
+<div class="card"><h2>Créer mon mot de passe</h2>
+<form id="pwdForm">
+<label>Mot de passe (8 caractères minimum)</label><input id="newPwd" type="password" minlength="8" required autocomplete="new-password">
+<label>Confirmer le mot de passe</label><input id="newPwd2" type="password" minlength="8" required autocomplete="new-password">
+<button type="submit">Valider</button>
+</form><div id="pwdStatus" class="status"></div></div>
+</section>
+
+<section id="surveyView" class="hidden">
+<header><img class="logo" src="./icons/icon-192.png" alt=""><h1>Mon suivi quotidien</h1><div class="subtitle">Merci de prendre 1 à 2 minutes pour répondre</div></header>
+<div class="userbar"><span id="userEmail"></span><button id="logoutButton" class="secondary" type="button">Déconnexion</button></div>
+<div class="date-box" id="dateBox"></div>
+
+<div id="notifBox" class="card hidden"><h2>🔔 Rappel du matin</h2>
+<p class="small" id="notifHelp" style="text-align:left;margin:0 0 8px"></p>
+<button id="notifBtn" type="button">Activer le rappel à 7 h</button>
+<div id="notifStatus" class="status"></div></div>
+
+<form id="survey">
+<section class="card"><h2>😴 Sommeil de la nuit dernière</h2>
+<div class="time-row">
+<div><label>À quelle heure vous êtes-vous couché(e) ?</label><input type="time" id="bedTime" required></div>
+<div><label>À quelle heure vous êtes-vous réveillé(e) ?</label><input type="time" id="wakeTime" required></div>
+</div>
+<label>À quel point vous sentez-vous reposé(e) ce matin ?</label><div class="slider-labels"><span>Pas du tout</span><span>Tout à fait</span></div>
+<div class="slider-row"><input type="range" id="rested" min="0" max="100" value="50"></div>
+</section>
+
+<section class="card"><h2>🙂 Votre état aujourd'hui</h2>
+<label>Comment évaluez-vous votre humeur générale ?</label><div class="slider-labels"><span>Très négative</span><span>Très positive</span></div>
+<div class="slider-row"><input type="range" id="mood" min="0" max="100" value="50"></div>
+<label>Votre niveau d'énergie :</label><div class="slider-labels"><span>Très faible</span><span>Très élevé</span></div>
+<div class="slider-row"><input type="range" id="energy" min="0" max="100" value="50"></div>
+</section>
+
+<section class="card"><h2>💪 Indice de Hooper</h2>
+<label>Comment évaluez-vous la qualité de votre sommeil ?</label><div class="slider-labels"><span>Très, très mauvaise</span><span>Excellente</span></div>
+<div class="slider-row"><input type="range" id="hSleep" min="1" max="7" step="1" value="4"></div>
+<label>Comment évaluez-vous votre niveau de stress ?</label><div class="slider-labels"><span>Extrêmement mauvais</span><span>Excellent</span></div>
+<div class="slider-row"><input type="range" id="hStress" min="1" max="7" step="1" value="4"></div>
+<label>Comment évaluez-vous votre niveau de fatigue ?</label><div class="slider-labels"><span>Extrêmement important</span><span>Aucun</span></div>
+<div class="slider-row"><input type="range" id="hFatigue" min="1" max="7" step="1" value="4"></div>
+<label>Comment évaluez-vous vos douleurs musculaires (courbatures) ?</label><div class="slider-labels"><span>Extrêmement élevées</span><span>Aucune</span></div>
+<div class="slider-row"><input type="range" id="hSoreness" min="1" max="7" step="1" value="4"></div>
+</section>
+
+<section class="card"><h2>📝 Commentaire facultatif</h2>
+<label>Y a-t-il quelque chose de particulier qui pourrait avoir influencé votre sommeil ou votre humeur ?</label>
+<textarea id="comment" maxlength="500" placeholder="Écrivez ici si vous le souhaitez..."></textarea></section>
+<button id="submitButton" type="submit">✓ Enregistrer mes réponses</button>
+<div class="status" id="surveyStatus"></div>
+<p class="small">🔒 Les réponses sont enregistrées dans la base de données.</p>
+</form></section>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const hashParams=new URLSearchParams(location.hash.slice(1));
+const isInvite=/^(invite|recovery)$/.test(hashParams.get("type")||"");
+const linkError=hashParams.get("error_code")||"";
+const supabase=createClient("https://rdtylyqxfsdbphkptkdw.supabase.co","sb_publishable_IHVRnoGdyddArovQEDct_w_hXLlx8U3");
+const $=id=>document.getElementById(id); let currentUser=null;
+
+// ---- Notifications push ----
+const VAPID_PUBLIC_KEY="BH4JwNxV3fKHKpgyMzFs-PXIhvHh_xF-v9vjUhc4Xu5kOXj7i2WAO_pLUydnv-RwsMC0tfyWAMXxxgDiS_jUP8U";
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./service-worker.js").catch(()=>{});
+const b64=s=>{const p="=".repeat((4-s.length%4)%4),r=atob((s+p).replace(/-/g,"+").replace(/_/g,"/"));return Uint8Array.from(r,c=>c.charCodeAt(0))};
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+const pushOK="serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window;
+function saveSub(sub){const j=sub.toJSON();return supabase.from("push_subscriptions").upsert({participant_id:currentUser.id,app:"quotidien",endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},{onConflict:"participant_id,app,endpoint"})}
+async function setupNotif(){
+ const box=$("notifBox"),btn=$("notifBtn"),help=$("notifHelp");
+ if(isIOS&&!standalone){box.classList.remove("hidden");btn.classList.add("hidden");help.textContent="Sur iPhone : dans Safari, touchez Partager, puis « Sur l'écran d'accueil ». Ouvrez ensuite l'app depuis son icône pour activer le rappel.";return}
+ if(!pushOK||VAPID_PUBLIC_KEY.startsWith("COLLER"))return;
+ const reg=await navigator.serviceWorker.ready;
+ const sub=await reg.pushManager.getSubscription();
+ box.classList.remove("hidden");
+ if(sub&&Notification.permission==="granted"){help.textContent="✅ Rappel activé : notification à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.add("hidden");await saveSub(sub);return}
+ if(Notification.permission==="denied"){help.textContent="Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du navigateur, puis rechargez la page.";btn.classList.add("hidden");return}
+ help.textContent="Recevez un rappel à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.remove("hidden");
+}
+$("notifBtn").addEventListener("click",async()=>{
+ status("notifStatus","Activation…","info");
+ try{
+  if(await Notification.requestPermission()!=="granted"){status("notifStatus","Autorisation refusée.","error");return}
+  const reg=await navigator.serviceWorker.ready;
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64(VAPID_PUBLIC_KEY)});
+  const {error}=await saveSub(sub);
+  if(error){status("notifStatus","Erreur : "+error.message,"error");return}
+  status("notifStatus","");await setupNotif();
+ }catch(e){status("notifStatus","Erreur : "+e.message,"error")}
+});
+
+function show(v){$("loading").classList.add("hidden");$("authView").classList.toggle("hidden",v!=="auth");$("pwdView").classList.toggle("hidden",v!=="pwd");$("surveyView").classList.toggle("hidden",v!=="survey")}
+function status(id,msg="",type=""){const e=$(id);e.textContent=msg;e.className="status "+type}
+function todayISO(){const d=new Date(),o=d.getTimezoneOffset();return new Date(d.getTime()-o*60000).toISOString().slice(0,10)}
+function setDate(){$("dateBox").textContent=new Date().toLocaleDateString("fr-FR",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
+["rested","mood","energy"].forEach(id=>$(id).addEventListener("input",()=>{const v=$(id+"Value");if(v)v.textContent=$(id).value+" / 100"}));
+const hooperIds=["hSleep","hStress","hFatigue","hSoreness"];
+// Échelle inversée : curseur à droite = meilleur état = score Hooper faible (1). Score = 8 - position du curseur.
+const hooperScore=id=>8-(+$(id).value);
+
+async function checkToday(){
+ status("surveyStatus","Vérification du questionnaire du jour…","info");
+ const {data,error}=await supabase.from("suivi_quotidien").select("id").eq("participant_id",currentUser.id).eq("date_reponse",todayISO()).maybeSingle();
+ if(error){status("surveyStatus","Impossible de vérifier : "+error.message,"error");return}
+ if(data){$("survey").querySelectorAll("input,textarea,button").forEach(e=>{if(e.id!=="logoutButton")e.disabled=true});status("surveyStatus","✅ Le questionnaire d'aujourd'hui a déjà été rempli. Merci !","success")}
+ else status("surveyStatus","");
+}
+async function enterSurvey(user){currentUser=user;$("userEmail").textContent=user.email||"";setDate();show("survey");setupNotif().catch(()=>{});await checkToday()}
+
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();status("authStatus","Connexion…","info");
+ const {data,error}=await supabase.auth.signInWithPassword({email:$("email").value.trim(),password:$("password").value});
+ if(error){status("authStatus","Erreur : "+error.message,"error");return}
+ await enterSurvey(data.user);
+});
+
+$("survey").addEventListener("submit",async e=>{
+ e.preventDefault(); if(!currentUser)return;
+ const b=$("submitButton");b.disabled=true;status("surveyStatus","Enregistrement en cours…","info");
+ const payload={participant_id:currentUser.id,date_reponse:todayISO(),heure_coucher:$("bedTime").value,heure_reveil:$("wakeTime").value,repos:+$("rested").value,humeur:+$("mood").value,energie:+$("energy").value,hooper_sommeil:hooperScore("hSleep"),hooper_stress:hooperScore("hStress"),hooper_fatigue:hooperScore("hFatigue"),hooper_courbatures:hooperScore("hSoreness"),hooper_total:hooperIds.reduce((t,id)=>t+hooperScore(id),0),commentaire:$("comment").value.trim()||null};
+ const {error}=await supabase.from("suivi_quotidien").insert(payload);
+ if(error){status("surveyStatus",error.code==="23505"?"⚠️ Une réponse existe déjà pour aujourd'hui.":"Erreur : "+error.message,"error");b.disabled=false;return}
+ status("surveyStatus","✅ Merci ! Vos réponses ont été enregistrées.","success");
+ $("survey").querySelectorAll("input,textarea,button").forEach(e=>{if(e.id!=="logoutButton")e.disabled=true});
+});
+
+$("logoutButton").addEventListener("click",async()=>{await supabase.auth.signOut();currentUser=null;$("survey").reset();show("auth")});
+$("pwdForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ const p1=$("newPwd").value,p2=$("newPwd2").value;
+ if(p1.length<8){status("pwdStatus","8 caractères minimum.","error");return}
+ if(p1!==p2){status("pwdStatus","Les mots de passe ne correspondent pas.","error");return}
+ status("pwdStatus","Enregistrement…","info");
+ const {data,error}=await supabase.auth.updateUser({password:p1});
+ if(error){status("pwdStatus","Erreur : "+error.message,"error");return}
+ history.replaceState(null,"",location.pathname);
+ await enterSurvey(data.user);
+});
+
+const {data:{session}}=await supabase.auth.getSession();
+if(session?.user&&isInvite){history.replaceState(null,"",location.pathname);show("pwd")}
+else if(session?.user)await enterSurvey(session.user);
+else{
+ show("auth");
+ if(linkError){history.replaceState(null,"",location.pathname);status("authStatus","Lien expiré ou déjà utilisé. Demandez une nouvelle invitation au chercheur.","error")}
+}
+</script>
+</body></html>

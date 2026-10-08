@@ -136,7 +136,9 @@ async function setupNotif(){
  help.textContent="Recevez un rappel à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.remove("hidden");
 }
 $("notifBtn").addEventListener("click",async()=>{
- status("notifStatus","Activation…","info");
+   $("notifBtn").classList.add("hidden");$("notifHelp").textContent="";
+  status("notifStatus","✅ Rappel activé : vous recevrez une notification à 7 h.","success");
+  setTimeout(()=>{$("notifBox").classList.add("hidden");status("notifStatus","")},3000);
  try{
   if(await Notification.requestPermission()!=="granted"){status("notifStatus","Autorisation refusée.","error");return}
   const reg=await navigator.serviceWorker.ready;

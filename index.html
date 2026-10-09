@@ -130,8 +130,8 @@ async function setupNotif(){
  if(!pushOK||VAPID_PUBLIC_KEY.startsWith("COLLER"))return;
  const reg=await navigator.serviceWorker.ready;
  const sub=await reg.pushManager.getSubscription();
+  if(sub&&Notification.permission==="granted"){box.classList.add("hidden");await saveSub(sub);return}
  box.classList.remove("hidden");
- if(sub&&Notification.permission==="granted"){help.textContent="✅ Rappel activé : notification à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.add("hidden");await saveSub(sub);return}
  if(Notification.permission==="denied"){help.textContent="Les notifications sont bloquées pour ce site. Autorisez-les dans les réglages du navigateur, puis rechargez la page.";btn.classList.add("hidden");return}
  help.textContent="Recevez un rappel à 7 h tant que le questionnaire du jour n'est pas rempli.";btn.classList.remove("hidden");
 }
